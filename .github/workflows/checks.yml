@@ -27,3 +27,14 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: pnpm run check
+
+  gate:
+    name: Gate
+    if: always()
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all compatibility checks
+        env:
+          CHECK_RESULT: ${{ needs.check.result }}
+        run: test "$CHECK_RESULT" = success
