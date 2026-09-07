@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "minimumReleaseAge": "3 days",
+  "semanticCommits": "disabled",
+  "postUpdateOptions": ["pnpmDedupe"],
+  "packageRules": [
+    {
+      "groupName": "changesets",
+      "matchPackageNames": ["/^@changesets\\//"]
+    },
+    {
+      "matchPackageNames": ["@changesets/apply-release-plan"],
+      "allowedVersions": "8.1.0",
+      "description": "Upgrade only with a regenerated and verified custom changelog patch."
+    },
+    {
+      "groupName": "oxc",
+      "matchPackageNames": [
+        "/^oxlint/",
+        "/^oxfmt/",
+        "/^@oxlint\\//",
+        "/^rolldown/"
+      ]
+    },
+    {
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "/^24\\./"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["actions/**"],
+      "pinDigests": false
+    }
+  ]
+}
