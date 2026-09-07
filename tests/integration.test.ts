@@ -147,6 +147,16 @@ test("ordinary blocks, JSDoc, lists, links, and inline code", () => {
   expect(result).toContain("/*\n * A long description of the next variable");
 });
 
+test("separates a standalone deprecated tag from its description", () => {
+  const input =
+    "/**\n * @deprecated\n * Use the replacement instead.\n */\nexport function oldFunction() {}\n";
+  const options = { printWidth: 80, trailingComments: "always" } as const;
+  const result = fix(input, options);
+  expect(result).toBe(
+    "/**\n * @deprecated Use the replacement instead.\n */\nexport function oldFunction() {}\n",
+  );
+});
+
 describe("safe placement", () => {
   test.each([
     "const a = 1; const b = 2; // A long explanation here\n",
