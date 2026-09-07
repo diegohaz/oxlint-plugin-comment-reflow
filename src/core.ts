@@ -150,7 +150,11 @@ function tagParts(
     while (line[end] === " " || line[end] === "\t") end++;
   }
   if (line.slice(end, end + 2) === "- ") end += 2;
-  return { prefix: line.slice(0, end), description: line.slice(end) };
+  const prefix = line.slice(0, end);
+  return {
+    prefix: /\s$/.test(prefix) ? prefix : prefix + " ",
+    description: line.slice(end),
+  };
 }
 
 function isStructure(line: string) {

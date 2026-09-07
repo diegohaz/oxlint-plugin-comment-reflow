@@ -84,6 +84,34 @@ describe("prose", () => {
 });
 
 describe("JSDoc", () => {
+  test.each([
+    "@deprecated",
+    "@returns",
+    "@returns {string}",
+    "@throws {Error}",
+    "@description",
+    "@param {string} value",
+    '@param {string} [value="default"]',
+    "@property {string} value",
+  ])("separates %s from a next-line description", (header) => {
+    const result = reflowText(
+      [header, "Use the replacement instead."],
+      80,
+      true,
+    );
+    expect(result).toEqual([`${header} Use the replacement instead.`]);
+    expect(reflowText(result, 80, true)).toEqual(result);
+    expect(reflowText([header], 80, true)).toEqual([header]);
+  });
+  test("wraps a next-line tag description with its separator", () => {
+    const result = reflowText(
+      ["@deprecated", "Use the replacement instead."],
+      26,
+      true,
+    );
+    expect(result).toEqual(["@deprecated Use the", "  replacement instead."]);
+    expect(reflowText(result, 26, true)).toEqual(result);
+  });
   test("preserves tag headers while wrapping descriptions", () => {
     const header =
       '@param {{ nested: { value: string } }} [options={ value: "a b" }] - ';
