@@ -7,6 +7,43 @@ import {
 } from "../src/core.js";
 
 describe("prose", () => {
+  test.each([18, 77, 120])("preserves URL-only lines at width %s", (width) => {
+    const link = "https://github.com/ariakit/ariakit/issues/7093";
+    for (const url of [
+      link,
+      "http://example.com/path?query=value#section",
+      "  HTTPS://example.com/path ",
+    ]) {
+      expect(reflowText([url, "Short prose."], width)).toEqual([
+        url,
+        "Short prose.",
+      ]);
+      expect(reflowText(["Short prose.", url], width)).toEqual([
+        "Short prose.",
+        url,
+      ]);
+      expect(reflowText(["Before.", url, "After."], width)).toEqual([
+        "Before.",
+        url,
+        "After.",
+      ]);
+    }
+  });
+  test("reflows prose on both sides of URL-only lines", () => {
+    const link = "https://example.com";
+    expect(
+      reflowText(
+        ["These short", "lines join.", link, "More short", "lines join."],
+        24,
+      ),
+    ).toEqual(["These short lines join.", link, "More short lines join."]);
+    expect(reflowText([`Read ${link}`, "for details."], 80)).toEqual([
+      `Read ${link} for details.`,
+    ]);
+    expect(reflowText([`${link} has details.`, "Read them."], 80)).toEqual([
+      `${link} has details. Read them.`,
+    ]);
+  });
   test("joins and wraps paragraphs with blank boundaries", () => {
     expect(
       reflowText(

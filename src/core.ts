@@ -159,6 +159,7 @@ function tagParts(
 
 function isStructure(line: string) {
   return (
+    /^\s*https?:\/\/\S+\s*$/i.test(line) ||
     /^(?:\s{4}|\t|\s*[*+-]\s|\s*\d+[.)]\s|\s*[#>|]|\s*\[[^\]]+\]:|\s*(?:---+|===+)\s*$|\s*<|\s*`{3}|\s*~{3}|\s*@)/.test(
       line,
     ) ||
