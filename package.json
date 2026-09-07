@@ -1,6 +1,6 @@
 {
   "name": "oxlint-plugin-comment-reflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Syntax-aware comment wrapping and safe trailing-comment placement for Oxlint.",
   "keywords": [
     "comments",
