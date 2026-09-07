@@ -159,14 +159,16 @@ function tagParts(
 
 function isStructure(line: string) {
   return (
-    /^(?:\s{4}|\t|\s*[*+-]\s|\s*\d+[.)]\s|\s*[#>|]|\s*\[[^\]]+\]:|\s*(?:---+|===+)\s*$|\s*<|\s*`{3}|\s*~{3}|\s*@)/.test(
+    /^(?:\s{4}|\t|\s*[*+-]\s|\s*\d+[.)]\s|\s*[#>|]|\s*\[[^\]]+\]:|\s*(?:---+|===+)\s*$|\s*`{3}|\s*~{3}|\s*@)/.test(
       line,
     ) ||
+    // Keep HTML-only lines and unfinished tags, but allow a tag before prose.
+    /^\s*<(?:[!?]|[^>]*$|.*>\s*$)/.test(line) ||
     /(?: {2}|\\)$/.test(line) ||
     /^\s*(?:const |let |var |function |class |import |export |return |if\s*\(|\/\/|\{|\})/.test(
       line,
     ) ||
-    /^[^{}[\]`]*\s\|\s|;$|^[\w.$]+\(.*\)[;]?$|^[\w.$]+\s*=\s*\S/.test(line)
+    /^[^{}[\]`]*\s\|\s|^[\w.$]+\(.*\)[;]?$|^[\w.$]+\s*=\s*\S/.test(line)
   );
 }
 
