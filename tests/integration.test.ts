@@ -15,6 +15,24 @@ import {
 const trailing =
   'const foo = "a"; // A long explanation that exceeds the configured width.\n';
 
+test.each([
+  ["eight nine;", "// seven eight nine; ten eleven"],
+  ["<b> eight nine", "// seven <b> eight nine ten\n// eleven"],
+])("reflows prose containing %s through Oxlint", (middle, expected) => {
+  const input = [
+    "// one two three four five six seven",
+    "// " + middle,
+    "// ten eleven",
+    "const value = 1;",
+    "",
+  ].join("\n");
+  expect(fix(input, { printWidth: 33 })).toBe(
+    ["// one two three four five six", expected, "const value = 1;", ""].join(
+      "\n",
+    ),
+  );
+});
+
 test.each(["line", "block", "jsdoc"])(
   "preserves URL-only lines in %s comments",
   (kind) => {

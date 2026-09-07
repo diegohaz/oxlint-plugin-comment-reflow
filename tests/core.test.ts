@@ -7,6 +7,62 @@ import {
 } from "../src/core.js";
 
 describe("prose", () => {
+  test("reflows prose that starts with type", () => {
+    expect(
+      reflowText(["type names describe values;", "use them here."], 80),
+    ).toEqual(["type names describe values; use them here."]);
+  });
+  test.each(["type Foo = string;", "type Box<T> = { value: T };"])(
+    "preserves the TypeScript alias %s beside prose",
+    (declaration) => {
+      const lines = ["Before the alias.", declaration, "After the alias."];
+      for (const width of [20, 80]) {
+        expect(reflowText(lines, width)).toEqual(lines);
+      }
+    },
+  );
+  test.each([
+    ["eight nine;", "seven eight nine; ten eleven"],
+    ["<b> eight nine", "seven <b> eight nine ten", "eleven"],
+    ["<input> eight nine", "seven <input> eight nine ten", "eleven"],
+  ])("joins prose containing %s", (middle, ...tail) => {
+    const lines = ["one two three four five six seven", middle, "ten eleven"];
+    const expected = ["one two three four five six", ...tail];
+    expect(reflowText(lines, 30)).toEqual(expected);
+    expect(reflowText([lines.join(" ")], 30)).toEqual(expected);
+    expect(reflowText(expected, 30)).toEqual(expected);
+  });
+  test.each(["eight nine;", "<input> eight nine"])(
+    "joins %s in list and tag descriptions",
+    (middle) => {
+      for (const prefix of ["- ", "@returns "]) {
+        const lines = [prefix + "one two three", "  " + middle, "  ten eleven"];
+        const result = reflowText(lines, 80, true);
+        expect(result).toEqual([
+          prefix + "one two three " + middle + " ten eleven",
+        ]);
+        expect(reflowText(result, 80, true)).toEqual(result);
+      }
+    },
+  );
+  test("preserves code and HTML beside prose", () => {
+    const lines = [
+      "A short introduction.",
+      "const value = 1;",
+      "doSomething(value);",
+      "value = 2;",
+      "return value;",
+      "<input>",
+      '<input type="text" />',
+      "<Button>Click here</Button>",
+      "<input",
+      '    type="text"',
+      "/>",
+      "<!-- An HTML comment -->",
+      "A short conclusion.",
+    ];
+    expect(reflowText(lines, 24)).toEqual(lines);
+  });
   test.each([18, 77, 120])("preserves URL-only lines at width %s", (width) => {
     const link = "https://github.com/ariakit/ariakit/issues/7093";
     for (const url of [
