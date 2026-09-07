@@ -33,6 +33,31 @@ test.each([
   );
 });
 
+test.each(["line", "block", "jsdoc"])(
+  "preserves URL-only lines in %s comments",
+  (kind) => {
+    const lines = [
+      "These short",
+      "lines join.",
+      "https://github.com/ariakit/ariakit/issues/7093",
+      "More short",
+      "lines join.",
+    ];
+    const expected = [
+      "These short lines join.",
+      lines[2]!,
+      "More short lines join.",
+    ];
+    const comment = (contents: string[]) =>
+      kind === "line"
+        ? contents.map((line) => `// ${line}\n`).join("")
+        : `${kind === "jsdoc" ? "/**" : "/*"}\n${contents.map((line) => ` * ${line}\n`).join("")} */\n`;
+    expect(fix(comment(lines) + "const a = 1;\n", { printWidth: 80 })).toBe(
+      comment(expected) + "const a = 1;\n",
+    );
+  },
+);
+
 test.each(["js", "jsx", "ts", "tsx"])(
   "loads and fixes a .%s file",
   (extension) => {
