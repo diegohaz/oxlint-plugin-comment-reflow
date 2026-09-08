@@ -34,14 +34,14 @@ Rolldown builds the public entry points. The declaration plugin emits TypeScript
 declarations. TypeScript checks the source, tests, and tool configuration.
 
 Vitest tests run real Oxlint processes, verify repeat fixes and Oxfmt stability,
-test the installed Changesets CLI, and load the packed package from a consumer
-project. They also check that consumers can use the published declarations.
+and load the packed package from a consumer project. They also check that
+consumers can use the published declarations.
 The consumer tests use local dependencies and do not need registry access.
 The tests do not publish packages.
 
 Changesets uses its built-in changelog generator. Release notes are grouped by
 major, minor, and patch changes. Multiline notes remain list items with indented
-details. Run `pnpm test .changeset/release.test.ts` to check release generation.
+details.
 
 Compatibility fixtures include Ariakit button documentation and the HTML
 example from [Oxc issue 21549](https://github.com/oxc-project/oxc/issues/21549).
