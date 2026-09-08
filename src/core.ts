@@ -311,12 +311,16 @@ export function reflowLineComments(
     .join(eol + indent);
 }
 
-/** Format an entire block token; preserve code and nonstandard block layouts. */
+/**
+ * Format an entire block token; preserve code and nonstandard block layouts.
+ * sourceLineWidth includes surrounding syntax when checking a single-line block.
+ */
 export function reflowBlockComment(
   raw: string,
   indent: string,
   printWidth: number,
   eol: string,
+  sourceLineWidth = columns(indent + raw),
 ): string {
   if (isProtected(raw) || raw.startsWith("/*!")) return raw;
   const jsdoc = raw.startsWith("/**");
@@ -328,7 +332,7 @@ export function reflowBlockComment(
   if (original.length === 1) {
     // Expanding single-line metadata or examples can change parser semantics.
     if (body.includes("@") || /`{3}|~{3}/.test(body)) return raw;
-    if (columns(indent + raw) <= printWidth) return raw;
+    if (sourceLineWidth <= printWidth) return raw;
     lines = [body.trim()];
   } else {
     if (original[0]!.trim() || original.at(-1)!.trim()) return raw;

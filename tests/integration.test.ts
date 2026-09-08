@@ -234,6 +234,116 @@ describe("safe placement", () => {
   });
 });
 
+describe("JSX comments", () => {
+  test.each(["\n", "\r\n"])("reflows comments between props with %j", (eol) => {
+    const input = [
+      "const view = <Button",
+      "  // These short",
+      "  // lines form one paragraph with useful text.",
+      '  prop="value"',
+      "  /* These short lines form one paragraph with useful text. */",
+      "  disabled",
+      "/>;",
+      "",
+    ].join(eol);
+    expect(fix(input, { printWidth: 40, trailingComments: "ignore" })).toBe(
+      [
+        "const view = <Button",
+        "  // These short lines form one",
+        "  // paragraph with useful text.",
+        '  prop="value"',
+        "  /*",
+        "   * These short lines form one",
+        "   * paragraph with useful text.",
+        "   */",
+        "  disabled",
+        "/>;",
+        "",
+      ].join(eol),
+    );
+  });
+
+  test.each(["<div>", "<>"])("reflows braced blocks inside %s", (opening) => {
+    const closing = opening === "<>" ? "</>" : "</div>";
+    const input = [
+      `const view = ${opening}`,
+      "  {/* These short lines form one paragraph with useful text. */}",
+      "  {/*",
+      "   * These short",
+      "   * lines join.",
+      "   */}",
+      `${closing};`,
+      "",
+    ].join("\n");
+    expect(fix(input, { printWidth: 40, trailingComments: "ignore" })).toBe(
+      [
+        `const view = ${opening}`,
+        "  {/*",
+        "   * These short lines form one",
+        "   * paragraph with useful text.",
+        "   */}",
+        "  {/*",
+        "   * These short lines join.",
+        "   */}",
+        `${closing};`,
+        "",
+      ].join("\n"),
+    );
+  });
+
+  test("counts JSX braces when deciding whether a block fits", () => {
+    const input = "const view = <>\n  {/* Short text */}\n</>;\n";
+    expect(fix(input, { printWidth: 20 })).toBe(input);
+    expect(fix(input, { printWidth: 19 })).toBe(
+      "const view = <>\n  {/*\n   * Short text\n   */}\n</>;\n",
+    );
+  });
+
+  test("keeps inline blocks inside the expression and preserves adjacent text", () => {
+    expect(
+      fix(
+        "const view = <div>Hello{/* A long comment with useful text. */} world</div>;\n",
+        {
+          printWidth: 30,
+        },
+      ),
+    ).toBe(
+      "const view = <div>Hello{/*\n * A long comment with useful\n * text.\n */} world</div>;\n",
+    );
+  });
+
+  test("reflows standalone line comments inside empty expressions", () => {
+    const input =
+      "const view = <>\n  {\n    // These short\n    // lines join.\n  }\n</>;\n";
+    expect(fix(input, { trailingComments: "ignore" })).toBe(
+      "const view = <>\n  {\n    // These short lines join.\n  }\n</>;\n",
+    );
+  });
+
+  test("keeps multiple blocks in the same JSX expression separate", () => {
+    expect(
+      fix("const view = <>{/* First comment */ /* Second comment */}</>;\n", {
+        printWidth: 30,
+      }),
+    ).toBe(
+      "const view = <>{/*\n * First comment\n */ /*\n * Second comment\n */}</>;\n",
+    );
+  });
+
+  test.each([
+    "const view = <Button\n  // eslint-disable-next-line some-rule -- A long directive explanation\n  // This adjacent comment is also protected.\n  prop='value'\n/>;\n",
+    "const view = <Button\n  /*! A long license header that must stay unchanged. */\n  prop='value'\n/>;\n",
+    "const view = <>{/* @ts-expect-error A long directive explanation */}</>;\n",
+    "const view = <Button\n  prop={\n    // These short\n    // lines stay beside the value.\n    value\n  }\n/>;\n",
+    "const view = <Button\n  {...\n    // These short\n    // lines stay beside the spread value.\n    props\n  }\n/>;\n",
+    "const view = <Button\n  prop='value' // A long trailing explanation\n  disabled\n/>;\n",
+  ])("preserves protected comments and comments beside code: %s", (input) => {
+    expect(fix(input, { printWidth: 30, trailingComments: "always" })).toBe(
+      input,
+    );
+  });
+});
+
 test("protects executable comments and licenses", () => {
   const input = fixture("protected.tsx");
   expect(fix(input, { printWidth: 20, trailingComments: "always" })).toBe(
@@ -302,6 +412,7 @@ test("Oxfmt and reflow reach a shared fixed point with JSDoc formatting disabled
     writeFileSync(
       join(directory, "input.tsx"),
       fixture("examples.tsx") +
+        fixture("jsx.tsx") +
         trailing +
         "/* Ordinary block prose with several words that should wrap at the chosen width. */\nconst object = {\n  x:1, // A useful member description here.\n};\n",
     );

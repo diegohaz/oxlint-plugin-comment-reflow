@@ -19,6 +19,8 @@ const containers = new Set([
   "TSTypeLiteral",
   "ObjectExpression",
   "TSEnumBody",
+  "JSXOpeningElement",
+  "JSXEmptyExpression",
 ]);
 const statements = new Set([
   "VariableDeclaration",
@@ -170,7 +172,11 @@ export const reflowRule: CreateRule = {
           let range: [number, number] = [comment.range[0], comment.range[1]];
           let replacement: string;
           let messageId = "reflow";
-          if (standalone(source, comment)) {
+          const jsxBlock =
+            comment.type === "Block" &&
+            source.getNodeByRangeIndex(comment.range[0])?.type ===
+              "JSXEmptyExpression";
+          if (standalone(source, comment) || jsxBlock) {
             if (comment.type === "Line") {
               const group = [comment];
               while (i + 1 < comments.length) {
@@ -203,6 +209,13 @@ export const reflowRule: CreateRule = {
                 indent,
                 options.printWidth,
                 eol,
+                jsxBlock
+                  ? columns(
+                      text
+                        .slice(start, lineEnd(text, comment.range[1]))
+                        .replace(/\r$/, ""),
+                    )
+                  : undefined,
               );
             }
           } else {

@@ -96,6 +96,11 @@ links, JSDoc references, and inline code together.
 The plugin leaves comment-like text in strings, template literals, regular
 expressions, and JSX text unchanged.
 
+Standalone `//` and `/* */` comments between JSX props reflow. Block comments
+inside empty JSX expressions, such as `{/* Explanation */}`, reflow inside their
+braces. Standalone line comments inside these expressions also reflow. Comments
+beside an expression value stay unchanged.
+
 Moving a comment requires an unambiguous statement or member on one source
 line. The target must start after indentation only. The comment must be the
 last content on the line. Object properties, class fields, and TypeScript
