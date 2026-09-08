@@ -19,6 +19,8 @@ const containers = new Set([
   "TSTypeLiteral",
   "ObjectExpression",
   "TSEnumBody",
+  "JSXOpeningElement",
+  "JSXEmptyExpression",
 ]);
 const statements = new Set([
   "VariableDeclaration",
@@ -161,16 +163,31 @@ export const reflowRule: CreateRule = {
           }
           start = end - 1;
         }
-        let lastEditEnd = -1;
+        const edits: {
+          comment: Comment;
+          range: [number, number];
+          replacement: string;
+          messageId: string;
+        }[] = [];
         for (let i = 0; i < comments.length; i++) {
           const comment = comments[i]!;
           if (protectedComments.has(comment)) continue;
           const start = lineStart(text, comment.range[0]);
-          const indent = /^[\t ]*/.exec(text.slice(start))![0];
           let range: [number, number] = [comment.range[0], comment.range[1]];
           let replacement: string;
           let messageId = "reflow";
-          if (standalone(source, comment)) {
+          const container = source.getNodeByRangeIndex(comment.range[0]);
+          const jsxBlock =
+            comment.type === "Block" &&
+            container?.type === "JSXEmptyExpression";
+          // Inline JSX blocks share the braces' indentation. A preceding
+          // block's closing marker must not add indentation on the next fix.
+          const indentStart =
+            jsxBlock && /[^\t ]/.test(text.slice(start, comment.range[0]))
+              ? lineStart(text, container.parent.range[0])
+              : start;
+          const indent = /^[\t ]*/.exec(text.slice(indentStart))![0];
+          if (standalone(source, comment) || jsxBlock) {
             if (comment.type === "Line") {
               const group = [comment];
               while (i + 1 < comments.length) {
@@ -203,6 +220,13 @@ export const reflowRule: CreateRule = {
                 indent,
                 options.printWidth,
                 eol,
+                jsxBlock
+                  ? columns(
+                      text
+                        .slice(start, lineEnd(text, comment.range[1]))
+                        .replace(/\r$/, ""),
+                    )
+                  : undefined,
               );
             }
           } else {
@@ -270,9 +294,22 @@ export const reflowRule: CreateRule = {
               separator + indent + formatted + eol + text.slice(start, codeEnd);
             messageId = "move";
           }
-          if (range[0] <= lastEditEnd || replacement === text.slice(...range))
+          const previousEdit = edits.at(-1);
+          if (
+            (previousEdit && range[0] < previousEdit.range[1]) ||
+            replacement === text.slice(...range)
+          )
             continue;
-          lastEditEnd = range[1];
+          // Oxlint treats touching fix ranges as conflicts. Combine them so
+          // adjacent block comments are fixed in the same pass.
+          if (previousEdit && range[0] === previousEdit.range[1]) {
+            previousEdit.range[1] = range[1];
+            previousEdit.replacement += replacement;
+          } else {
+            edits.push({ comment, range, replacement, messageId });
+          }
+        }
+        for (const { comment, range, replacement, messageId } of edits) {
           context.report({
             loc: comment.loc,
             messageId,
