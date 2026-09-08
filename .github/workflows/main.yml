@@ -9,13 +9,8 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: main-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   check:
-    name: Gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -30,3 +25,14 @@ jobs:
         run: pnpm run typecheck
       - name: Build and test
         run: pnpm test
+
+  gate:
+    name: Gate
+    if: always()
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all checks
+        env:
+          CHECK_RESULT: ${{ needs.check.result }}
+        run: test "$CHECK_RESULT" = success

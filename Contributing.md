@@ -61,7 +61,8 @@ pnpm exec lefthook install
 ```
 
 The `Main` workflow in `.github/workflows/main.yml` runs lint, formatting,
-typecheck, and build/tests as separate steps on the pinned Node version. Its
-single job retains the required `Gate` check name. The release workflow uses
-the same setup and validation steps. Run `pnpm run check` before you submit a
-change. Editor UI behavior is not covered by the automated test suite.
+typecheck, and build/tests as separate steps on the pinned Node version. A
+separate `Gate` job requires the checks to pass. The release workflow uses the
+same setup and dispatches `Main` for version PRs. Run `pnpm run check` before
+you submit a change. Editor UI behavior is not covered by the automated test
+suite.
