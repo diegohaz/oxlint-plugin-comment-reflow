@@ -2,9 +2,3 @@ saveExact: true
 
 allowBuilds:
   lefthook: true
-
-overrides:
-  "@changesets/apply-release-plan": 8.1.0
-
-patchedDependencies:
-  "@changesets/apply-release-plan@8.1.0": patches/@changesets__apply-release-plan@8.1.0.patch

@@ -1,2 +1,0 @@
-# Preserve upstream patch context lines that precede tab-indented source.
-patches/*.patch whitespace=-space-before-tab
