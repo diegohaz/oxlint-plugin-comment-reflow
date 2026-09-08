@@ -29,7 +29,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/workflows/setup
-      - run: pnpm run check
       - name: Create version PR or publish
         id: changesets
         uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
@@ -46,4 +45,4 @@ jobs:
           PR_NUMBER: ${{ steps.changesets.outputs.pr-number }}
         run: |
           release_branch=$(gh pr view "$PR_NUMBER" --json headRefName --jq .headRefName)
-          gh workflow run checks.yml --ref "$release_branch"
+          gh workflow run main.yml --ref "$release_branch"

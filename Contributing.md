@@ -2,8 +2,11 @@
 
 ## Set up the project
 
-Use the Node version in `.node-version` and the pnpm version in `package.json`.
-Development dependencies use exact versions.
+Install the pnpm version in `package.json`. pnpm downloads the Node version in
+`devEngines.runtime` when you install dependencies and uses it for project
+commands. The resolved runtime is recorded in `pnpm-lock.yaml`.
+Development dependencies use exact versions. `engines.node` defines the supported
+Node versions for consumers.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -60,6 +63,9 @@ script. If a cached install does not create the hook, run:
 pnpm exec lefthook install
 ```
 
-CI runs the full checks independently on the supported Node versions. Run
-`pnpm run check` before you submit a change. Editor UI behavior is not covered
-by the automated test suite.
+The `Main` workflow in `.github/workflows/main.yml` runs lint, formatting,
+typecheck, and build/tests as separate steps on the pinned Node version. A
+separate `Gate` job requires the checks to pass. The release workflow uses the
+same setup and dispatches `Main` for version PRs. Run `pnpm run check` before
+you submit a change. Editor UI behavior is not covered by the automated test
+suite.

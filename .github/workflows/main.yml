@@ -1,4 +1,4 @@
-name: Checks
+name: Main
 
 on:
   push:
@@ -9,24 +9,23 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: checks-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   check:
+    name: Check
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [24.18.0, 26.8.1]
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: ./.github/workflows/setup
-        with:
-          node-version: ${{ matrix.node }}
-      - run: pnpm run check
+      - name: Lint
+        run: pnpm run lint
+      - name: Check formatting
+        run: pnpm run format:check
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Build and test
+        run: pnpm test
 
   gate:
     name: Gate
@@ -34,7 +33,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - name: Require all compatibility checks
+      - name: Require all checks
         env:
           CHECK_RESULT: ${{ needs.check.result }}
         run: test "$CHECK_RESULT" = success
