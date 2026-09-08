@@ -7,22 +7,19 @@ import { configure, lintIn, oxlint, root, withProject } from "./helpers.js";
 test("packed package loads from a consumer and publishes resolvable declarations", () => {
   withProject((directory) => {
     // Packing is offline and does not invoke any publication command.
-    const packed = JSON.parse(
+    const pack = JSON.parse(
       execFileSync(
-        "npm",
+        "pnpm",
         [
+          "--config.ignore-scripts=true",
           "pack",
-          "--ignore-scripts",
           "--json",
-          "--cache",
-          join(directory, "npm-cache"),
           "--pack-destination",
           directory,
         ],
         { cwd: root, encoding: "utf8" },
       ),
-    );
-    const pack = Object.values(packed)[0] as {
+    ) as {
       filename: string;
       files: { path: string }[];
     };
@@ -46,7 +43,7 @@ test("packed package loads from a consumer and publishes resolvable declarations
     mkdirSync(target, { recursive: true });
     execFileSync("tar", [
       "-xzf",
-      join(directory, pack.filename),
+      pack.filename,
       "--strip-components=1",
       "-C",
       target,
