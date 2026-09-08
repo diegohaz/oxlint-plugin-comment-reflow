@@ -38,7 +38,7 @@ test("packed package loads from a consumer and publishes resolvable declarations
       files.every(
         (file) =>
           file.startsWith("dist/") ||
-          ["package.json", "README.md", "LICENSE", "NOTICE"].includes(file),
+          ["package.json", "README.md", "LICENSE"].includes(file),
       ),
     ).toBe(true);
     const consumer = join(directory, "consumer");

@@ -39,9 +39,13 @@ project. They also check that consumers can use the published declarations.
 The consumer tests use local dependencies and do not need registry access.
 The tests do not publish packages.
 
+Changesets uses its built-in changelog generator. Release notes are grouped by
+major, minor, and patch changes. Multiline notes remain list items with indented
+details. Run `pnpm test .changeset/release.test.ts` to check release generation.
+
 Compatibility fixtures include Ariakit button documentation and the HTML
 example from [Oxc issue 21549](https://github.com/oxc-project/oxc/issues/21549).
-See `NOTICE` for attribution.
+See `LICENSE` for attribution.
 
 Files in `tests/fixtures` contain intentional formatting and are excluded from
 Oxlint, Oxfmt, and TypeScript project checks. Keep fixture edits deliberate.
