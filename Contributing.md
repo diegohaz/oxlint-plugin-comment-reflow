@@ -45,7 +45,6 @@ details.
 
 Compatibility fixtures include Ariakit button documentation and the HTML
 example from [Oxc issue 21549](https://github.com/oxc-project/oxc/issues/21549).
-See `LICENSE` for attribution.
 
 Files in `tests/fixtures` contain intentional formatting and are excluded from
 Oxlint, Oxfmt, and TypeScript project checks. Keep fixture edits deliberate.
