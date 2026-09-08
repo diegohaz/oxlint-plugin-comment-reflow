@@ -320,13 +320,32 @@ describe("JSX comments", () => {
     );
   });
 
-  test("keeps multiple blocks in the same JSX expression separate", () => {
+  test.each(["", " "])(
+    "keeps multiple blocks in the same JSX expression separate with gap %j",
+    (gap) => {
+      expect(
+        fix(
+          `const view = <>{/* First comment */${gap}/* Second comment */}</>;\n`,
+          {
+            printWidth: 30,
+          },
+        ),
+      ).toBe(
+        `const view = <>{/*\n * First comment\n */${gap}/*\n * Second comment\n */}</>;\n`,
+      );
+    },
+  );
+
+  test("keeps indentation stable after another block's closing marker", () => {
     expect(
-      fix("const view = <>{/* First comment */ /* Second comment */}</>;\n", {
-        printWidth: 30,
-      }),
+      fix(
+        "const view = <>{/* First comment *//* One two three four five six seven eight nine ten. */}</>;\n",
+        {
+          printWidth: 16,
+        },
+      ),
     ).toBe(
-      "const view = <>{/*\n * First comment\n */ /*\n * Second comment\n */}</>;\n",
+      "const view = <>{/*\n * First comment\n *//*\n * One two three\n * four five six\n * seven eight\n * nine ten.\n */}</>;\n",
     );
   });
 
