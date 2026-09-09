@@ -1,5 +1,11 @@
 # oxlint-plugin-comment-reflow
 
+## 0.2.0
+
+### Minor Changes
+
+- 1d9b268: Reflow comments inside empty JSX expressions and standalone line and block comments between JSX props. Keep JSX braces and adjacent text intact.
+
 ## 0.1.2
 
 - Preserve comment lines that contain only an HTTP or HTTPS URL when reflowing surrounding prose.
