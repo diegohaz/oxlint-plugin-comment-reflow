@@ -98,6 +98,95 @@ test("reflows plain multiline block comments", () => {
   );
 });
 
+test.each(["ignore", "always", "overflow"] as const)(
+  "reports missing block prefixes without a fix in trailing mode %s",
+  (trailingComments) => {
+    withProject((directory) => {
+      configure(directory, { printWidth: 80, trailingComments });
+      const broken = [
+        "/**",
+        " * Moves the pointer onto an element",
+        " and waits until the engine matches `:hover`",
+        " * on it, so the capture shows the hover state in every engine. Scrolling first",
+        " * keeps the pointer move from scrolling.",
+        " */",
+        "export function brokenPrefix() {}",
+        "",
+      ].join("\n");
+      const underfilled =
+        "/**\n * These short\n * lines join.\n */\nexport function underfilled() {}\n";
+      const wellFormed =
+        "/**\n * These short lines join.\n */\nexport function wellFormed() {}\n";
+      const path = join(directory, "input.tsx");
+      writeFileSync(path, broken + underfilled + wellFormed);
+      const report = lintIn(directory, false);
+      expect(report.status).toBe(1);
+      expect(report.stdout).toContain(
+        "Comment line is missing its `*` prefix.",
+      );
+      expect(report.stdout).toContain("input.tsx:3:1");
+      expect(report.stdout).toContain("Reflow comment prose");
+      for (let pass = 0; pass < 2; pass++) {
+        const result = lintIn(directory);
+        expect(result.status).toBe(1);
+        expect(result.stdout).toContain(
+          "Comment line is missing its `*` prefix.",
+        );
+        expect(result.stdout).not.toContain("Reflow comment prose");
+        expect(readFileSync(path, "utf8")).toBe(
+          broken +
+            underfilled.replace("These short\n * lines", "These short lines") +
+            wellFormed,
+        );
+      }
+    });
+  },
+);
+
+test.each(["/*", "/**"])(
+  "reports multiple missing prefixes in indented %s blocks with CRLF",
+  (opening) => {
+    withProject((directory) => {
+      configure(directory);
+      const input = [
+        "function example() {",
+        `\t${opening}`,
+        "\t * A starred first line.",
+        "\t A missing prefix.",
+        "\t Another missing prefix.",
+        "\t */",
+        "}",
+        "",
+      ].join("\r\n");
+      const path = join(directory, "input.tsx");
+      writeFileSync(path, input);
+      const report = lintIn(directory);
+      expect(report.status).toBe(1);
+      expect(report.stdout.match(/Comment line is missing its/g)).toHaveLength(
+        2,
+      );
+      expect(report.stdout).toContain("input.tsx:4:1");
+      expect(report.stdout).toContain("input.tsx:5:1");
+      expect(readFileSync(path, "utf8")).toBe(input);
+    });
+  },
+);
+
+test.each([
+  "/*\n  Items that this module\n  handles:\n  * one\n  * two\n*/\n",
+  "/**\n  Moves the pointer onto an element\n  and waits until the engine matches `:hover`.\n*/\n",
+  "/*\n  * A bullet list.\n    A continuation.\n*/\n",
+  "/** First line beside the marker.\n * More text.\n Unstarred text.\n */\n",
+  "/**\n * A starred line.\n Unstarred text beside the closing marker. */\n",
+  "/**\n * A license header.\n Copyright 2026 Example\n */\n",
+  "/*!\n * A protected header.\n More text.\n */\n",
+  "/**\n * A directive.\n @ts-check\n */\n",
+  "/**\n * A starred line.\n\n * Another paragraph.\n */\n",
+  "/**\n * A starred line.\n *and a prefix without a space.\n */\n",
+])("preserves deliberate or protected block layouts: %s", (input) => {
+  expect(fix(input)).toBe(input);
+});
+
 test("preserves whole line-comment license groups", () => {
   const input =
     "// Copyright 2026 Diego Haz\n// These short\n// license lines must remain unchanged.\nconst a = 1;\n";
@@ -235,6 +324,29 @@ describe("safe placement", () => {
 });
 
 describe("JSX comments", () => {
+  test.each([
+    "const view = <>\n  {/*\n   * A starred first line.\n   A missing prefix.\n   */}\n</>;\n",
+    "const view = <div>Hello{/*\n * A starred first line.\n A missing prefix.\n */} world</div>;\n",
+    "const view = <>\n\t{/* First block.\n\t *//*\n\t * A starred first line.\n\t A missing prefix.\n\t */}\n</>;\n",
+  ])(
+    "reports missing prefixes using JSX expression indentation: %s",
+    (input) => {
+      withProject((directory) => {
+        configure(directory);
+        const path = join(directory, "input.tsx");
+        writeFileSync(path, input);
+        for (const applyFix of [false, true]) {
+          const report = lintIn(directory, applyFix);
+          expect(report.status).toBe(1);
+          expect(report.stdout).toContain(
+            "Comment line is missing its `*` prefix.",
+          );
+          expect(readFileSync(path, "utf8")).toBe(input);
+        }
+      });
+    },
+  );
+
   test.each(["\n", "\r\n"])("reflows comments between props with %j", (eol) => {
     const input = [
       "const view = <Button",
