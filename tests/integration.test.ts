@@ -324,6 +324,29 @@ describe("safe placement", () => {
 });
 
 describe("JSX comments", () => {
+  test.each([
+    "const view = <>\n  {/*\n   * A starred first line.\n   A missing prefix.\n   */}\n</>;\n",
+    "const view = <div>Hello{/*\n * A starred first line.\n A missing prefix.\n */} world</div>;\n",
+    "const view = <>\n\t{/* First block.\n\t *//*\n\t * A starred first line.\n\t A missing prefix.\n\t */}\n</>;\n",
+  ])(
+    "reports missing prefixes using JSX expression indentation: %s",
+    (input) => {
+      withProject((directory) => {
+        configure(directory);
+        const path = join(directory, "input.tsx");
+        writeFileSync(path, input);
+        for (const applyFix of [false, true]) {
+          const report = lintIn(directory, applyFix);
+          expect(report.status).toBe(1);
+          expect(report.stdout).toContain(
+            "Comment line is missing its `*` prefix.",
+          );
+          expect(readFileSync(path, "utf8")).toBe(input);
+        }
+      });
+    },
+  );
+
   test.each(["\n", "\r\n"])("reflows comments between props with %j", (eol) => {
     const input = [
       "const view = <Button",

@@ -134,6 +134,7 @@ cannot be distinguished from prose.
 
 If a multiline block starts with a `*` line aligned under the first `*` in its
 opening marker, the rule reports later nonblank lines that lack a `*` prefix.
+Inside JSX expressions, alignment uses the expression's indentation, as reflow does.
 The opening and closing markers must be on separate lines. These reports have
 no autofix. Restore the missing prefixes, then run `--fix` to reflow the prose.
 Blank lines and prefixes without a following space, such as `*text`, are not

@@ -225,8 +225,7 @@ export const reflowRule: CreateRule = {
                 /^\/\*\*?[\t ]*$/.test(lines[0]!) &&
                 /^[\t ]*\*\/$/.test(lines.at(-1)!) &&
                 firstPrefix &&
-                columns(firstPrefix[1]!) ===
-                  columns(text.slice(start, comment.range[0])) + 1
+                columns(firstPrefix[1]!) === columns(indent) + 1
               ) {
                 for (let line = 2; line < lines.length - 1; line++) {
                   const content = lines[line]!;
