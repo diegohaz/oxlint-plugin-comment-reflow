@@ -1,5 +1,11 @@
 # oxlint-plugin-comment-reflow
 
+## 0.2.1
+
+### Patch Changes
+
+- 14361aa: Report missing `*` prefixes in blocks that start with a conventional aligned star. Keep the malformed block unchanged so the missing prefixes can be restored before reflow. Preserve plain blocks with Markdown bullets and unstarred JSDoc blocks.
+
 ## 0.2.0
 
 ### Minor Changes
