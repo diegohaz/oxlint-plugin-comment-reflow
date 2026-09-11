@@ -121,6 +121,7 @@ export const reflowRule: CreateRule = {
     messages: {
       reflow: "Reflow comment prose to a target width of {{width}} columns.",
       move: "Move this trailing comment above its target and reflow its prose.",
+      missingBlockPrefix: "Comment line is missing its `*` prefix.",
     },
   },
   create(context) {
@@ -215,8 +216,35 @@ export const reflowRule: CreateRule = {
                 eol,
               );
             } else {
+              const raw = text.slice(...range);
+              const lines = raw.split(/\r\n|\n/);
+              const firstPrefix = /^([\t ]*)\*(?: |$)/.exec(lines[1] ?? "");
+              // An aligned first star distinguishes a broken starred block
+              // from plain prose that contains Markdown bullets.
+              if (
+                /^\/\*\*?[\t ]*$/.test(lines[0]!) &&
+                /^[\t ]*\*\/$/.test(lines.at(-1)!) &&
+                firstPrefix &&
+                columns(firstPrefix[1]!) ===
+                  columns(text.slice(start, comment.range[0])) + 1
+              ) {
+                for (let line = 2; line < lines.length - 1; line++) {
+                  const content = lines[line]!;
+                  if (!content.trim() || /^\s*\*/.test(content)) continue;
+                  context.report({
+                    loc: {
+                      start: { line: comment.loc.start.line + line, column: 0 },
+                      end: {
+                        line: comment.loc.start.line + line,
+                        column: content.length,
+                      },
+                    },
+                    messageId: "missingBlockPrefix",
+                  });
+                }
+              }
               replacement = reflowBlockComment(
-                text.slice(...range),
+                raw,
                 indent,
                 options.printWidth,
                 eol,

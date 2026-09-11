@@ -132,6 +132,13 @@ are preserved. This is a conservative prose formatter, not a full Markdown or
 JSDoc parser. Put code in fences or in an `@example` body when its structure
 cannot be distinguished from prose.
 
+If a multiline block starts with a `*` line aligned under the first `*` in its
+opening marker, the rule reports later nonblank lines that lack a `*` prefix.
+The opening and closing markers must be on separate lines. These reports have
+no autofix. Restore the missing prefixes, then run `--fix` to reflow the prose.
+Blank lines and prefixes without a following space, such as `*text`, are not
+reported. Plain blocks with `*` bullets and unstarred JSDoc blocks stay unchanged.
+
 ## Use with Oxfmt and an editor
 
 Set the same width in both tools. Disable Oxfmt's JSDoc formatter explicitly in
